@@ -24,4 +24,8 @@ def handle_drawings():
         return jsonify(response.data)
 
 if __name__ == '__main__':
+    # Esta configuración es para desarrollo local
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))
+else:
+    # Esta configuración es para producción (Gunicorn)
+    app.run()
