@@ -7,6 +7,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
+# Asegúrate de que la carpeta static existe
+RUN mkdir -p static
+
 # Exponer el puerto en el que se ejecutará la aplicación
 EXPOSE 8080
 
