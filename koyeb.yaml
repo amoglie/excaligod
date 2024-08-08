@@ -13,3 +13,7 @@ services:
     routes:
       - path: /
         public: true
+    healthcheck:
+      http:
+        path: /health
+        port: 8080
