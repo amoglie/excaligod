@@ -4,11 +4,12 @@ services:
     dockerfile: Dockerfile
     ports:
       - port: 8080
+        http: 80
     env:
       - name: SUPABASE_URL
-        value: https://vayvurfxtipihydzthcb.supabase.co
-      - name: SUPABASE_KEY
         value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZheXZ1cmZ4dGlwaWh5ZHp0aGNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjMwNjI4NDMsImV4cCI6MjAzODYzODg0M30.cjS-uRpTKL-dtQbhDLMEz_xDUf6btI1FwWovQwMklrw
+      - name: SUPABASE_KEY
+        value: YOUR_SUPABASE_ANON_KEY
     routes:
       - path: /
         public: true
