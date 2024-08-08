@@ -1,9 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
     const drawingList = document.getElementById('drawing-list');
     const newDrawingButton = document.getElementById('new-drawing');
-    
-    // Inicializar Excalidraw
     const excalidrawContainer = document.getElementById('excalidraw-container');
+
+    // Inicializar Excalidraw
     const excalidrawApp = ExcalidrawLib.createExcalidraw({
         container: excalidrawContainer
     });
