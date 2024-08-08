@@ -1,8 +1,8 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_from_directory
 from supabase import create_client, Client
 import os
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static')
 
 # Configuración de Supabase
 url: str = os.getenv("SUPABASE_URL", "https://vayvurfxtipihydzthcb.supabase.co")
@@ -22,6 +22,10 @@ def handle_drawings():
     else:
         response = supabase.table("drawings").select("*").execute()
         return jsonify(response.data)
+
+@app.route('/static/<path:path>')
+def serve_static(path):
+    return send_from_directory('static', path)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))
