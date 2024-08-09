@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const excalidrawFrame = document.getElementById('excalidraw-frame');
     const versionElement = document.getElementById('version');
     let currentVersion = '0.1.0';
+    let currentDrawingId = null;
 
     function updateVersion() {
         const [major, minor, patch] = currentVersion.split('.').map(Number);
@@ -11,10 +12,11 @@ document.addEventListener('DOMContentLoaded', () => {
         versionElement.textContent = `v${currentVersion}`;
     }
 
-    function loadExcalidrawFrame(drawingData = null) {
+    function loadExcalidrawFrame(drawingData = null, drawingId = null) {
         const excalidrawUrl = 'https://excalidraw.com/';
         const url = drawingData ? `${excalidrawUrl}#json=${encodeURIComponent(JSON.stringify(drawingData))}` : excalidrawUrl;
         excalidrawFrame.src = url;
+        currentDrawingId = drawingId;
     }
 
     newDrawingButton.addEventListener('click', createNewDrawing);
@@ -56,7 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(response => response.json())
             .then(drawing => {
                 if (drawing.data) {
-                    loadExcalidrawFrame(drawing.data);
+                    loadExcalidrawFrame(drawing.data, drawingId);
                     updateVersion();
                 } else {
                     console.error('Drawing data is missing');
@@ -68,10 +70,22 @@ document.addEventListener('DOMContentLoaded', () => {
     function createNewDrawing() {
         const name = prompt('Enter a name for the new drawing:');
         if (name) {
-            loadExcalidrawFrame();
-            updateVersion();
-            // Aquí deberías implementar la lógica para guardar el nuevo dibujo en Supabase
-            // cuando el usuario termine de dibujar y decida guardar
+            const newDrawingData = { elements: [], appState: {} };
+            
+            fetch('/api/drawings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ name: name, data: newDrawingData }),
+            })
+            .then(response => response.json())
+            .then(newDrawing => {
+                loadExcalidrawFrame(newDrawingData, newDrawing.id);
+                updateVersion();
+                fetchDrawings();
+            })
+            .catch(error => console.error('Error creating new drawing:', error));
         }
     }
 
@@ -103,7 +117,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (response.ok) {
                     fetchDrawings();
                     updateVersion();
-                    loadExcalidrawFrame(); // Cargar un nuevo lienzo vacío
+                    if (currentDrawingId === drawingId) {
+                        loadExcalidrawFrame();
+                        currentDrawingId = null;
+                    }
                 } else {
                     throw new Error('Failed to delete drawing');
                 }
@@ -112,7 +129,41 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Inicializar la aplicación
+    function saveCurrentDrawing() {
+        if (excalidrawFrame.contentWindow && currentDrawingId) {
+            excalidrawFrame.contentWindow.postMessage({ type: 'get-scene' }, '*');
+        }
+    }
+
+    function updateDrawingInSupabase(drawingId, updatedData) {
+        fetch(`/api/drawings/${drawingId}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ data: updatedData }),
+        })
+        .then(response => response.json())
+        .then(() => {
+            console.log('Drawing updated successfully');
+            updateVersion();
+        })
+        .catch(error => console.error('Error updating drawing:', error));
+    }
+
+    window.addEventListener('message', (event) => {
+        if (event.data.type === 'scene-update') {
+            const updatedDrawingData = event.data.elements;
+            if (currentDrawingId) {
+                updateDrawingInSupabase(currentDrawingId, updatedDrawingData);
+            } else {
+                console.error('No current drawing ID to update');
+            }
+        }
+    });
+
     fetchDrawings();
     loadExcalidrawFrame();
+
+    setInterval(saveCurrentDrawing, 30000); // Guardar cada 30 segundos
 });
