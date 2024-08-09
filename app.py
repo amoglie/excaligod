@@ -5,8 +5,8 @@ import os
 app = Flask(__name__, static_folder='static')
 
 # Configuración de Supabase
-url: str = os.getenv("SUPABASE_URL", "https://vayvurfxtipihydzthcb.supabase.co")
-key: str = os.getenv("SUPABASE_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZheXZ1cmZ4dGlwaWh5ZHp0aGNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjMwNjI4NDMsImV4cCI6MjAzODYzODg0M30.cjS-uRpTKL-dtQbhDLMEz_xDUf6btI1FwWovQwMklrw")
+url: str = os.getenv("https://vayvurfxtipihydzthcb.supabase.co")
+key: str = os.getenv("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZheXZ1cmZ4dGlwaWh5ZHp0aGNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjMwNjI4NDMsImV4cCI6MjAzODYzODg0M30.cjS-uRpTKL-dtQbhDLMEz_xDUf6btI1FwWovQwMklrw")
 supabase: Client = create_client(url, key)
 
 @app.route('/')
@@ -17,11 +17,17 @@ def index():
 def handle_drawings():
     if request.method == 'POST':
         data = request.json
-        response = supabase.table("drawings").insert(data).execute()
-        return jsonify(response.data)
+        try:
+            response = supabase.table("drawings").insert(data).execute()
+            return jsonify(response.data[0]), 201
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
     else:
-        response = supabase.table("drawings").select("*").execute()
-        return jsonify(response.data)
+        try:
+            response = supabase.table("drawings").select("*").execute()
+            return jsonify(response.data)
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
 
 @app.route('/static/<path:path>')
 def serve_static(path):
