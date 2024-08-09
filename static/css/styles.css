@@ -1,8 +1,8 @@
 body, html {
     margin: 0;
     padding: 0;
-    font-family: Arial, sans-serif;
     height: 100%;
+    font-family: Arial, sans-serif;
 }
 
 #app {
@@ -15,6 +15,12 @@ body, html {
     background-color: #f0f0f0;
     padding: 20px;
     box-sizing: border-box;
+    overflow-y: auto;
+}
+
+#excalidraw-container {
+    flex-grow: 1;
+    height: 100%;
 }
 
 #drawing-list {
@@ -23,20 +29,19 @@ body, html {
 }
 
 #drawing-list li {
+    margin-bottom: 10px;
     cursor: pointer;
-    padding: 5px 0;
 }
 
 #drawing-list li:hover {
     background-color: #e0e0e0;
 }
 
-#excalidraw-container {
-    flex-grow: 1;
+button {
+    margin-right: 5px;
 }
 
-#new-drawing {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 20px;
+#version {
+    font-size: 0.8em;
+    color: #666;
 }
