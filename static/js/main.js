@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const newDrawingButton = document.getElementById('new-drawing');
     const excalidrawFrame = document.getElementById('excalidraw-frame');
     const versionElement = document.getElementById('version');
-    let currentVersion = '0.9.0';
+    let currentVersion = '1.0.0';
     let currentDrawingId = null;
 
     function updateVersion() {
@@ -62,7 +62,8 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(drawing => {
                 if (drawing && drawing.data) {
                     currentDrawingId = drawingId;
-                    loadDrawingIntoExcalidraw(JSON.parse(drawing.data));
+                    const drawingData = typeof drawing.data === 'string' ? JSON.parse(drawing.data) : drawing.data;
+                    loadDrawingIntoExcalidraw(drawingData);
                     updateVersion();
                 } else {
                     console.error('Drawing data is missing');
@@ -85,9 +86,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ name: name, data: JSON.stringify(newDrawingData) }),
+                body: JSON.stringify({ name: name, data: newDrawingData }),
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
             .then(newDrawing => {
                 currentDrawingId = newDrawing.id;
                 loadDrawingIntoExcalidraw(newDrawingData);
@@ -138,25 +144,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Listener para mensajes del iframe de Excalidraw
-    window.addEventListener('message', function(event) {
-        if (event.origin !== 'https://excalidraw.com') return;
-        
-        if (event.data.type === 'excalidraw') {
-            const drawingData = event.data;
-            if (currentDrawingId) {
-                updateDrawingInSupabase(currentDrawingId, drawingData);
-            }
-        }
-    }, false);
-
     function updateDrawingInSupabase(drawingId, drawingData) {
         fetch(`/api/drawings/${drawingId}`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ data: JSON.stringify(drawingData) }),
+            body: JSON.stringify({ data: drawingData }),
         })
         .then(response => response.json())
         .then(() => {
@@ -165,6 +159,17 @@ document.addEventListener('DOMContentLoaded', () => {
         })
         .catch(error => console.error('Error updating drawing:', error));
     }
+
+    window.addEventListener('message', function(event) {
+        if (event.origin !== 'https://excalidraw.com') return;
+        
+        if (event.data && event.data.type === 'excalidraw') {
+            const drawingData = event.data;
+            if (currentDrawingId) {
+                updateDrawingInSupabase(currentDrawingId, drawingData);
+            }
+        }
+    }, false);
 
     // Inicializar la aplicación
     fetchDrawings();
