@@ -2,10 +2,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const drawingList = document.getElementById('drawing-list');
     const newDrawingButton = document.getElementById('new-drawing');
     const excalidrawContainer = document.getElementById('excalidraw-container');
+    let excalidrawApp;
 
     // Inicializar Excalidraw
-    const excalidrawApp = ExcalidrawLib.createExcalidraw({
-        container: excalidrawContainer
+    excalidrawApp = Excalidraw.default({
+        container: excalidrawContainer,
+        UIOptions: { canvasActions: { export: false, saveAsImage: false } }
     });
 
     // Cargar dibujos existentes
