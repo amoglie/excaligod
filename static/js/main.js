@@ -1,10 +1,11 @@
 document.addEventListener('DOMContentLoaded', () => {
     const drawingList = document.getElementById('drawing-list');
     const newDrawingButton = document.getElementById('new-drawing');
-    const excalidrawFrame = document.getElementById('excalidraw-frame');
+    const excalidrawContainer = document.getElementById('excalidraw-container');
     const versionElement = document.getElementById('version');
-    let currentVersion = '0.2.0';
+    let currentVersion = '0.3.0';
     let currentDrawingId = null;
+    let excalidrawApp = null;
 
     function updateVersion() {
         const [major, minor, patch] = currentVersion.split('.').map(Number);
@@ -12,11 +13,21 @@ document.addEventListener('DOMContentLoaded', () => {
         versionElement.textContent = `v${currentVersion}`;
     }
 
-    function loadExcalidrawFrame(drawingData = null, drawingId = null) {
-        const excalidrawUrl = 'https://excalidraw.com/';
-        const url = drawingData ? `${excalidrawUrl}#json=${encodeURIComponent(JSON.stringify(drawingData))}` : excalidrawUrl;
-        excalidrawFrame.src = url;
-        currentDrawingId = drawingId;
+    async function initExcalidraw() {
+        excalidrawApp = await Excalidraw.default({
+            container: excalidrawContainer,
+            onChange: (elements, appState) => {
+                if (currentDrawingId) {
+                    updateDrawingInSupabase(currentDrawingId, { elements, appState });
+                }
+            },
+        });
+    }
+
+    function loadDrawingIntoExcalidraw(drawingData) {
+        if (excalidrawApp) {
+            excalidrawApp.updateScene(drawingData);
+        }
     }
 
     newDrawingButton.addEventListener('click', createNewDrawing);
@@ -63,16 +74,17 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .then(drawing => {
                 if (drawing && drawing.data) {
-                    loadExcalidrawFrame(drawing.data, drawingId);
+                    currentDrawingId = drawingId;
+                    loadDrawingIntoExcalidraw(drawing.data);
                     updateVersion();
                 } else {
                     console.error('Drawing data is missing');
-                    loadExcalidrawFrame(null, drawingId);
+                    loadDrawingIntoExcalidraw({ elements: [], appState: {} });
                 }
             })
             .catch(error => {
                 console.error('Error loading drawing:', error);
-                loadExcalidrawFrame(null, drawingId);
+                loadDrawingIntoExcalidraw({ elements: [], appState: {} });
             });
     }
 
@@ -90,7 +102,8 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .then(response => response.json())
             .then(newDrawing => {
-                loadExcalidrawFrame(newDrawingData, newDrawing.id);
+                currentDrawingId = newDrawing.id;
+                loadDrawingIntoExcalidraw(newDrawingData);
                 updateVersion();
                 fetchDrawings();
             })
@@ -127,8 +140,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     fetchDrawings();
                     updateVersion();
                     if (currentDrawingId === drawingId) {
-                        loadExcalidrawFrame();
                         currentDrawingId = null;
+                        loadDrawingIntoExcalidraw({ elements: [], appState: {} });
                     }
                 } else {
                     throw new Error('Failed to delete drawing');
@@ -138,19 +151,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function saveCurrentDrawing() {
-        if (excalidrawFrame.contentWindow && currentDrawingId) {
-            excalidrawFrame.contentWindow.postMessage({ type: 'get-scene' }, '*');
-        }
-    }
-
-    function updateDrawingInSupabase(drawingId, updatedData) {
+    function updateDrawingInSupabase(drawingId, drawingData) {
         fetch(`/api/drawings/${drawingId}`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ data: updatedData }),
+            body: JSON.stringify({ data: drawingData }),
         })
         .then(response => response.json())
         .then(() => {
@@ -160,17 +167,9 @@ document.addEventListener('DOMContentLoaded', () => {
         .catch(error => console.error('Error updating drawing:', error));
     }
 
-    window.addEventListener('message', (event) => {
-        if (event.origin === 'https://excalidraw.com' && event.data.type === 'excalidraw') {
-            const updatedDrawingData = event.data.elements;
-            if (currentDrawingId && updatedDrawingData) {
-                updateDrawingInSupabase(currentDrawingId, updatedDrawingData);
-            }
-        }
+    // Inicializar la aplicación
+    initExcalidraw().then(() => {
+        fetchDrawings();
+        loadDrawingIntoExcalidraw({ elements: [], appState: {} });
     });
-
-    fetchDrawings();
-    loadExcalidrawFrame();
-
-    setInterval(saveCurrentDrawing, 30000); // Guardar cada 30 segundos
 });
