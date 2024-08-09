@@ -31,12 +31,14 @@ def handle_drawings():
             response = supabase.table("drawings").insert(data).execute()
             return jsonify(response.data[0]), 201
         except Exception as e:
+            print(f"Error al crear el dibujo: {e}")
             return jsonify({"error": str(e)}), 500
     else:
         try:
             response = supabase.table("drawings").select("id,name,created_at").order('created_at', desc=True).execute()
             return jsonify(response.data)
         except Exception as e:
+            print(f"Error al obtener los dibujos: {e}")
             return jsonify({"error": str(e)}), 500
 
 @app.route('/api/drawings/<drawing_id>', methods=['GET', 'PATCH', 'DELETE'])
@@ -57,13 +59,20 @@ def handle_drawing(drawing_id):
             if 'data' in data:
                 data['data'] = json.dumps(data['data'])  # Convertir a JSON string
             response = supabase.table("drawings").update(data).eq("id", drawing_id).execute()
-            return jsonify(response.data[0])
+            if response.data:
+                return jsonify(response.data[0])
+            else:
+                return jsonify({"error": "Drawing not found"}), 404
         
         elif request.method == 'DELETE':
             response = supabase.table("drawings").delete().eq("id", drawing_id).execute()
-            return jsonify({"message": "Drawing deleted successfully"})
+            if response.data:
+                return jsonify({"message": "Drawing deleted successfully"})
+            else:
+                return jsonify({"error": "Drawing not found"}), 404
         
     except Exception as e:
+        print(f"Error al manejar el dibujo {drawing_id}: {e}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/static/<path:path>')
