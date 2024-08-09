@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const newDrawingButton = document.getElementById('new-drawing');
     const excalidrawContainer = document.getElementById('excalidraw-container');
     const versionElement = document.getElementById('version');
-    let currentVersion = '0.6.0';
+    let currentVersion = '0.7.0';
     let currentDrawingId = null;
     let excalidrawApp = null;
 
@@ -14,8 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function initExcalidraw() {
-        const ExcalidrawModule = window.Excalidraw;
-        excalidrawApp = await ExcalidrawModule.default({
+        const excalidrawModule = await import("https://unpkg.com/@excalidraw/excalidraw/dist/excalidraw.production.min.js");
+        excalidrawApp = await excalidrawModule.default.createExcalidraw({
             container: excalidrawContainer,
             onChange: (elements, appState) => {
                 if (currentDrawingId) {
