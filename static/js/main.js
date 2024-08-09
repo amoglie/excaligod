@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const newDrawingButton = document.getElementById('new-drawing');
     const excalidrawContainer = document.getElementById('excalidraw-container');
     const versionElement = document.getElementById('version');
-    let currentVersion = '0.3.0';
+    let currentVersion = '0.4.0';
     let currentDrawingId = null;
     let excalidrawApp = null;
 
@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
             container: excalidrawContainer,
             onChange: (elements, appState) => {
                 if (currentDrawingId) {
-                    updateDrawingInSupabase(currentDrawingId, { elements, appState });
+                    debounce(() => updateDrawingInSupabase(currentDrawingId, { elements, appState }), 1000)();
                 }
             },
         });
@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(drawing => {
                 if (drawing && drawing.data) {
                     currentDrawingId = drawingId;
-                    loadDrawingIntoExcalidraw(drawing.data);
+                    loadDrawingIntoExcalidraw(JSON.parse(drawing.data));
                     updateVersion();
                 } else {
                     console.error('Drawing data is missing');
@@ -98,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ name: name, data: newDrawingData }),
+                body: JSON.stringify({ name: name, data: JSON.stringify(newDrawingData) }),
             })
             .then(response => response.json())
             .then(newDrawing => {
@@ -165,6 +165,18 @@ document.addEventListener('DOMContentLoaded', () => {
             updateVersion();
         })
         .catch(error => console.error('Error updating drawing:', error));
+    }
+
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
     }
 
     // Inicializar la aplicación
