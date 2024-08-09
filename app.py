@@ -29,9 +29,7 @@ def handle_drawings():
         data = request.json
         try:
             # Asegúrate de que 'data' es una cadena JSON válida
-            if isinstance(data.get('data'), str):
-                json.loads(data['data'])  # Esto lanzará una excepción si no es JSON válido
-            else:
+            if isinstance(data.get('data'), dict):
                 data['data'] = json.dumps(data['data'])
             
             response = supabase.table("drawings").insert(data).execute()
@@ -57,7 +55,7 @@ def handle_drawing(drawing_id):
 
     try:
         if request.method == 'GET':
-            response = supabase.table("drawings").select("*").eq("id", drawing_id).execute()
+            response = supabase.table("drawings").select("*").filter("id", "eq", drawing_id).execute()
             if response.data:
                 return jsonify(response.data[0])
             else:
@@ -65,16 +63,16 @@ def handle_drawing(drawing_id):
         
         elif request.method == 'PATCH':
             data = request.json
-            if 'data' in data and isinstance(data['data'], str):
-                json.loads(data['data'])  # Verifica que sea JSON válido
-            response = supabase.table("drawings").update(data).eq("id", drawing_id).execute()
+            if 'data' in data and isinstance(data['data'], dict):
+                data['data'] = json.dumps(data['data'])
+            response = supabase.table("drawings").update(data).filter("id", "eq", drawing_id).execute()
             if response.data:
                 return jsonify(response.data[0])
             else:
                 return jsonify({"error": "Drawing not found"}), 404
         
         elif request.method == 'DELETE':
-            response = supabase.table("drawings").delete().eq("id", drawing_id).execute()
+            response = supabase.table("drawings").delete().filter("id", "eq", drawing_id).execute()
             if response.data:
                 return jsonify({"message": "Drawing deleted successfully"})
             else:
