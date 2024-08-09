@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const newDrawingButton = document.getElementById('new-drawing');
     const excalidrawContainer = document.getElementById('excalidraw-container');
     const versionElement = document.getElementById('version');
-    let currentVersion = '0.5.0';
+    let currentVersion = '0.6.0';
     let currentDrawingId = null;
     let excalidrawApp = null;
 
@@ -14,7 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function initExcalidraw() {
-        excalidrawApp = await window.ExcalidrawLib.default({
+        const ExcalidrawModule = window.Excalidraw;
+        excalidrawApp = await ExcalidrawModule.default({
             container: excalidrawContainer,
             onChange: (elements, appState) => {
                 if (currentDrawingId) {
@@ -157,7 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ data: drawingData }),
+            body: JSON.stringify({ data: JSON.stringify(drawingData) }),
         })
         .then(response => response.json())
         .then(() => {
