@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify, send_from_directory
 from supabase import create_client, Client
 import os
+import json
 
 app = Flask(__name__, static_folder='static')
 
@@ -53,6 +54,8 @@ def handle_drawing(drawing_id):
         
         elif request.method == 'PATCH':
             data = request.json
+            if 'data' in data:
+                data['data'] = json.dumps(data['data'])  # Convertir a JSON string
             response = supabase.table("drawings").update(data).eq("id", drawing_id).execute()
             return jsonify(response.data[0])
         
