@@ -1,21 +1,24 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Excalidraw App</title>
-    <link rel="stylesheet" href="/static/css/styles.css">
-    <script src="https://unpkg.com/@excalidraw/excalidraw/dist/excalidraw.production.min.js"></script>
-</head>
-<body>
-    <div id="app">
-        <div id="sidebar">
-            <h2>Drawings</h2>
-            <button id="new-drawing">New Drawing</button>
-            <ul id="drawing-list"></ul>
-        </div>
-        <div id="excalidraw-container"></div>
-    </div>
-    <script src="/static/js/main.js"></script>
-</body>
-</html>
+   <html lang="en">
+   <head>
+       <meta charset="UTF-8">
+       <meta name="viewport" content="width=device-width, initial-scale=1.0">
+       <title>Excalidraw App</title>
+       <link rel="stylesheet" href="/static/css/styles.css">
+       <script src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
+       <script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
+       <script src="https://unpkg.com/@excalidraw/excalidraw/dist/excalidraw.production.min.js"></script>
+   </head>
+   <body>
+       <div id="app">
+           <div id="sidebar">
+               <h2>Drawings</h2>
+               <small>v0.1.0</small>
+               <button id="new-drawing">New Drawing</button>
+               <ul id="drawing-list"></ul>
+           </div>
+           <div id="excalidraw-container"></div>
+       </div>
+       <script src="/static/js/main.js"></script>
+   </body>
+   </html>
