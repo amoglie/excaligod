@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const newDrawingButton = document.getElementById('new-drawing');
     const excalidrawFrame = document.getElementById('excalidraw-frame');
     const versionElement = document.getElementById('version');
-    let currentVersion = '0.1.0';
+    let currentVersion = '0.2.0';
     let currentDrawingId = null;
 
     function updateVersion() {
@@ -55,16 +55,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function loadDrawing(drawingId) {
         fetch(`/api/drawings/${drawingId}`)
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
             .then(drawing => {
-                if (drawing.data) {
+                if (drawing && drawing.data) {
                     loadExcalidrawFrame(drawing.data, drawingId);
                     updateVersion();
                 } else {
                     console.error('Drawing data is missing');
+                    loadExcalidrawFrame(null, drawingId);
                 }
             })
-            .catch(error => console.error('Error loading drawing:', error));
+            .catch(error => {
+                console.error('Error loading drawing:', error);
+                loadExcalidrawFrame(null, drawingId);
+            });
     }
 
     function createNewDrawing() {
@@ -152,12 +161,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     window.addEventListener('message', (event) => {
-        if (event.data.type === 'scene-update') {
+        if (event.origin === 'https://excalidraw.com' && event.data.type === 'excalidraw') {
             const updatedDrawingData = event.data.elements;
-            if (currentDrawingId) {
+            if (currentDrawingId && updatedDrawingData) {
                 updateDrawingInSupabase(currentDrawingId, updatedDrawingData);
-            } else {
-                console.error('No current drawing ID to update');
             }
         }
     });
