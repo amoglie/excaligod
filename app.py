@@ -48,9 +48,9 @@ def handle_drawing(drawing_id):
 
     try:
         if request.method == 'GET':
-            response = supabase.table("drawings").select("*").eq("id", drawing_id).single().execute()
+            response = supabase.table("drawings").select("*").eq("id", drawing_id).execute()
             if response.data:
-                return jsonify(response.data)
+                return jsonify(response.data[0])
             else:
                 return jsonify({"error": "Drawing not found"}), 404
         
