@@ -28,8 +28,17 @@ def handle_drawings():
     if request.method == 'POST':
         data = request.json
         try:
+            # Asegúrate de que 'data' es una cadena JSON válida
+            if isinstance(data.get('data'), str):
+                json.loads(data['data'])  # Esto lanzará una excepción si no es JSON válido
+            else:
+                data['data'] = json.dumps(data['data'])
+            
             response = supabase.table("drawings").insert(data).execute()
             return jsonify(response.data[0]), 201
+        except json.JSONDecodeError as e:
+            print(f"Error al decodificar JSON: {e}")
+            return jsonify({"error": "Datos de dibujo inválidos"}), 400
         except Exception as e:
             print(f"Error al crear el dibujo: {e}")
             return jsonify({"error": str(e)}), 500
@@ -56,6 +65,8 @@ def handle_drawing(drawing_id):
         
         elif request.method == 'PATCH':
             data = request.json
+            if 'data' in data and isinstance(data['data'], str):
+                json.loads(data['data'])  # Verifica que sea JSON válido
             response = supabase.table("drawings").update(data).eq("id", drawing_id).execute()
             if response.data:
                 return jsonify(response.data[0])
@@ -69,6 +80,9 @@ def handle_drawing(drawing_id):
             else:
                 return jsonify({"error": "Drawing not found"}), 404
         
+    except json.JSONDecodeError as e:
+        print(f"Error al decodificar JSON: {e}")
+        return jsonify({"error": "Datos de dibujo inválidos"}), 400
     except Exception as e:
         print(f"Error al manejar el dibujo {drawing_id}: {e}")
         return jsonify({"error": str(e)}), 500
